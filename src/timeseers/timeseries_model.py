@@ -108,6 +108,11 @@ class AdditiveTimeSeries(TimeSeriesModel):
         right = self.right.plot(*args, **kwargs)
         return left + right
 
+    def _predict(self, *args, **kwargs):
+        left = self.left._predict(*args, **kwargs)
+        right = self.right._predict(*args, **kwargs)
+        return left + right
+
     def __repr__(self):
         return (
             f"AdditiveTimeSeries( \n"
@@ -131,6 +136,11 @@ class MultiplicativeTimeSeries(TimeSeriesModel):
     def plot(self, trace, scaled_t, y_scaler):
         left = self.left.plot(trace, scaled_t, y_scaler)
         right = self.right.plot(trace, scaled_t, y_scaler)
+        return left + (left * right)
+
+    def _predict(self, *args, **kwargs):
+        left = self.left._predict(*args, **kwargs)
+        right = self.right._predict(*args, **kwargs)
         return left + (left * right)
 
     def __repr__(self):
