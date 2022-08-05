@@ -8,9 +8,14 @@ import pymc3 as pm
 
 class LogisticGrowth(TimeSeriesModel):
     def __init__(
-            self, capacity: float, name: str = None, n_changepoints=None,
-            changepoints_prior_scale=0.05, growth_prior_scale=1, pool_cols=None,
-            pool_type='complete'
+        self,
+        capacity: float,
+        name: str = None,
+        n_changepoints=None,
+        changepoints_prior_scale=0.05,
+        growth_prior_scale=1,
+        pool_cols=None,
+        pool_type="complete",
     ):
         self.cap = capacity
         self.n_changepoints = n_changepoints
@@ -22,51 +27,74 @@ class LogisticGrowth(TimeSeriesModel):
         super().__init__()
 
     def definition(self, model, X, scale_factor):
-
         def update_gamma(j, gamma, i, delta, offset, rate, change_point):
             return T.set_subtensor(
                 gamma[i, j],
-                (change_point[j] - offset[i] - T.sum(gamma[i, :j])) *
-                (1 - (rate[i] + T.sum(delta[i, :j])) / (rate[i] + T.sum(delta[i, :j+1])))
-                )
+                (change_point[j] - offset[i] - T.sum(gamma[i, :j]))
+                * (
+                    1
+                    - (rate[i] + T.sum(delta[i, :j]))
+                    / (rate[i] + T.sum(delta[i, : j + 1]))
+                ),
+            )
 
         def get_gamma(i, gamma_init, delta, m, k, s):
             gamma, _ = theano.scan(
-              update_gamma,
-              sequences=[
-                  T.arange(gamma_init.shape[1]),
-              ],
-              outputs_info=gamma_init,
-              non_sequences=[i, delta, m, k, s],
+                update_gamma,
+                sequences=[
+                    T.arange(gamma_init.shape[1]),
+                ],
+                outputs_info=gamma_init,
+                non_sequences=[i, delta, m, k, s],
             )
             return gamma[-1]
 
         t = X["t"].values
         self.cap_scaled = self._y_scaler_.transform(self.cap)
-        group, n_groups, self.groups_ = get_group_definition(X, self.pool_cols, self.pool_type)
+        group, n_groups, self.groups_ = get_group_definition(
+            X, self.pool_cols, self.pool_type
+        )
         self.s = np.linspace(0, np.max(t), self.n_changepoints + 2)[1:-1]
 
         with model:
             A = (t[:, None] > self.s) * 1.0
 
-            if self.pool_type == 'partial':
-                sigma_k = pm.HalfCauchy(self._param_name('sigma_k'), beta=self.growth_prior_scale)
-                offset_k = pm.Normal(self._param_name('offset_k'), mu=0, sd=1, shape=n_groups)
+            if self.pool_type == "partial":
+                sigma_k = pm.HalfCauchy(
+                    self._param_name("sigma_k"), beta=self.growth_prior_scale
+                )
+                offset_k = pm.Normal(
+                    self._param_name("offset_k"), mu=0, sd=1, shape=n_groups
+                )
                 k = pm.Deterministic(self._param_name("k"), offset_k * sigma_k)
 
                 sigma_delta = pm.HalfCauchy(
-                    self._param_name('sigma_delta'), beta=self.changepoints_prior_scale
+                    self._param_name("sigma_delta"), beta=self.changepoints_prior_scale
                 )
                 offset_delta = pm.Laplace(
-                    self._param_name('offset_delta'), 0, 1, shape=(n_groups, self.n_changepoints)
+                    self._param_name("offset_delta"),
+                    0,
+                    1,
+                    shape=(n_groups, self.n_changepoints),
                 )
-                delta = pm.Deterministic(self._param_name("delta"), offset_delta * sigma_delta)
+                delta = pm.Deterministic(
+                    self._param_name("delta"), offset_delta * sigma_delta
+                )
 
             else:
-                delta = pm.Laplace(self._param_name("delta"), 0, self.changepoints_prior_scale,
-                                   shape=(n_groups, self.n_changepoints))
-                k = pm.Normal(self._param_name("k"), 0, self.growth_prior_scale,
-                              shape=n_groups, testval=np.ones(n_groups))
+                delta = pm.Laplace(
+                    self._param_name("delta"),
+                    0,
+                    self.changepoints_prior_scale,
+                    shape=(n_groups, self.n_changepoints),
+                )
+                k = pm.Normal(
+                    self._param_name("k"),
+                    0,
+                    self.growth_prior_scale,
+                    shape=n_groups,
+                    testval=np.ones(n_groups),
+                )
 
             m = pm.Normal(self._param_name("m"), 0, 5, shape=n_groups)
 
@@ -78,9 +106,8 @@ class LogisticGrowth(TimeSeriesModel):
                 non_sequences=[delta, m, k, self.s],
             )
             gamma = gamma[-1]
-            growth = (
-                (k[group] + pm.math.sum(A * delta[group], axis=1)) *
-                (t - (m[group] + pm.math.sum(A * gamma[group], axis=1)))
+            growth = (k[group] + pm.math.sum(A * delta[group], axis=1)) * (
+                t - (m[group] + pm.math.sum(A * gamma[group], axis=1))
             )
             growth = self.cap_scaled / (1 + pm.math.exp(-growth))
         return growth
@@ -94,14 +121,11 @@ class LogisticGrowth(TimeSeriesModel):
         A = (t[:, None] > self.s) * 1
         gamma = np.zeros(delta.T.shape)
         for i in range(gamma.shape[0]):
-            gamma[i] = (
-                (self.s[i] - m - gamma[:i].sum(axis=0)) *
-                (1 - ((k + delta[:, :i].sum(axis=1)) / (k + delta[:, :i+1].sum(axis=1)))).T
-            )
-        g = (
-            (k + A @ delta.T) *
-            (t[:, None] - (m + A @ gamma))
-        )
+            gamma[i] = (self.s[i] - m - gamma[:i].sum(axis=0)) * (
+                1
+                - ((k + delta[:, :i].sum(axis=1)) / (k + delta[:, : i + 1].sum(axis=1)))
+            ).T
+        g = (k + A @ delta.T) * (t[:, None] - (m + A @ gamma))
         return self.cap_scaled / (1 + np.exp(-g))
 
     def plot(self, trace, scaled_t, y_scaler):

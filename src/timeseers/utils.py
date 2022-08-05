@@ -24,11 +24,15 @@ class MinMaxScaler:
         if isinstance(data, pd.DataFrame):
             self.max_ = data.max(axis=0)
             self.min_ = data.min(axis=0)
-            self.scale_factor_ = (self.max_ - self.min_).where(self.max_ != self.min_, 1)
+            self.scale_factor_ = (self.max_ - self.min_).where(
+                self.max_ != self.min_, 1
+            )
         if isinstance(data, np.ndarray):
             self.max_ = data.max(axis=0)[None, ...]
             self.min_ = data.min(axis=0)[None, ...]
-            self.scale_factor_ = np.where(self.max_ != self.min_, self.max_ - self.min_, 1)
+            self.scale_factor_ = np.where(
+                self.max_ != self.min_, self.max_ - self.min_, 1
+            )
         if isinstance(data, pd.Series):
             self.max_ = data.max()
             self.min_ = data.min()
@@ -124,7 +128,9 @@ def trend_data(n_changepoints, location="spaced", noise=0.001):
     )
 
 
-def logistic_growth_data(n_changepoints, location="spaced", noise=0.001, loc=0, scale=0.2):
+def logistic_growth_data(
+    n_changepoints, location="spaced", noise=0.001, loc=0, scale=0.2
+):
     delta = np.random.laplace(size=n_changepoints, loc=loc, scale=scale)
     gamma = np.zeros(n_changepoints)
 
@@ -140,14 +146,16 @@ def logistic_growth_data(n_changepoints, location="spaced", noise=0.001, loc=0, 
     k, m = 2.5, 0
 
     for i in range(n_changepoints):
-        left = (s[i] - m - np.sum(gamma[:i]))
-        right = (1 - (k + np.sum(delta[:i])) / (k + np.sum(delta[:i+1])))
+        left = s[i] - m - np.sum(gamma[:i])
+        right = 1 - (k + np.sum(delta[:i])) / (k + np.sum(delta[: i + 1]))
         gamma[i] = left * right
 
     g = (k + np.sum(A * delta, axis=1)) * (t - (m + np.sum(A * gamma, axis=1)))
     logistic_growth = 1 / (1 + np.exp(-g)) + np.random.randn(len(t)) * noise
     return (
-        pd.DataFrame({"t": pd.date_range("2018-1-1", periods=len(t)), "value": logistic_growth}),
+        pd.DataFrame(
+            {"t": pd.date_range("2018-1-1", periods=len(t)), "value": logistic_growth}
+        ),
         delta,
     )
 
@@ -160,7 +168,9 @@ def seasonal_data(n_components, noise=0.001):
     t = np.linspace(0, 1, 1000)
     beta = np.random.normal(size=2 * n_components)
 
-    seasonality = X(t, 365.25 / len(t), n_components) @ beta + np.random.randn(len(t)) * noise
+    seasonality = (
+        X(t, 365.25 / len(t), n_components) @ beta + np.random.randn(len(t)) * noise
+    )
 
     return (
         pd.DataFrame(
@@ -175,7 +185,9 @@ def rbf_seasonal_data(n_components, sigma=0.015, noise=0.001):
         mod = (t % year)[:, None]
         left_difference = np.sqrt((mod - peaks[None, :]) ** 2)
         right_difference = np.abs(year - left_difference)
-        return np.exp(- ((np.minimum(left_difference, right_difference)) ** 2) / (2 * sigma**2))
+        return np.exp(
+            -((np.minimum(left_difference, right_difference)) ** 2) / (2 * sigma**2)
+        )
 
     t = pd.Series(pd.date_range("2010-01-01", "2014-01-01"))
     scaler = MinMaxScaler()
@@ -185,7 +197,10 @@ def rbf_seasonal_data(n_components, sigma=0.015, noise=0.001):
     peaks = get_periodic_peaks(n_components)
     peaks = np.array([p / scale_factor for p in peaks])
     period = pd.Timedelta(days=365.25)
-    seasonality = X(scaled_t, peaks, sigma, period / scale_factor) @ beta + np.random.randn(len(t)) * noise
+    seasonality = (
+        X(scaled_t, peaks, sigma, period / scale_factor) @ beta
+        + np.random.randn(len(t)) * noise
+    )
     return (
         pd.DataFrame(
             {"t": pd.date_range("2018-1-1", periods=len(t)), "value": seasonality}
@@ -195,9 +210,9 @@ def rbf_seasonal_data(n_components, sigma=0.015, noise=0.001):
 
 
 def get_group_definition(X, pool_cols, pool_type):
-    if pool_type == 'complete':
-        group = np.zeros(len(X), dtype='int')
-        group_mapping = {0: 'all'}
+    if pool_type == "complete":
+        group = np.zeros(len(X), dtype="int")
+        group_mapping = {0: "all"}
         n_groups = 1
     else:
         group = X[pool_cols].cat.codes.values
@@ -206,9 +221,7 @@ def get_group_definition(X, pool_cols, pool_type):
     return group, n_groups, group_mapping
 
 
-def get_periodic_peaks(
-        n: int = 20,
-        period: pd.Timedelta = pd.Timedelta(days=365.25)):
+def get_periodic_peaks(n: int = 20, period: pd.Timedelta = pd.Timedelta(days=365.25)):
     """
     Returns n periodic peaks that repeats each period. Return value
     can be used in RBFSeasonality.

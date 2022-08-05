@@ -4,6 +4,7 @@ import pymc3 as pm
 
 class Likelihood(ABC):
     """Subclasses should implement the observed method which defines an observed random variable"""
+
     @abstractmethod
     def observed(self, mu, y_scaled):
         pass
@@ -11,6 +12,7 @@ class Likelihood(ABC):
 
 class Gaussian(Likelihood):
     """Gaussian likelihood with constant variance"""
+
     def __init__(self, sigma=0.5):
         self.sigma = sigma
 
@@ -21,7 +23,8 @@ class Gaussian(Likelihood):
 
 class StudentT(Likelihood):
     """StudentT likelihood with constant variance, robust to outliers"""
-    def __init__(self, alpha=1., beta=1., sigma=0.5):
+
+    def __init__(self, alpha=1.0, beta=1.0, sigma=0.5):
         self.alpha = alpha
         self.beta = beta
         self.sigma = sigma
