@@ -71,6 +71,14 @@ class TimeSeriesModel(ABC):
         fig.tight_layout()
         return fig
 
+    def predict_at(self, t, pool_group=0):
+
+        t_scaled = self._X_scaler_.transform(t)
+        pred_scaled = self._predict(self.trace_, [t_scaled], pool_group=pool_group)
+        pred = self._y_scaler_.inv_transform(pred_scaled)
+
+        return pred.mean(axis=1)
+
     @abstractmethod
     def plot(self, trace, t, y_scaler):
         pass
