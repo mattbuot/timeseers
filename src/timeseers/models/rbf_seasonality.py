@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pymc3 as pm
-from timeseers.timeseries_model import TimeSeriesModel
+from timeseers.models.timeseries_model import TimeSeriesModel
 from timeseers.utils import add_subplot, get_group_definition, get_periodic_peaks
 
 

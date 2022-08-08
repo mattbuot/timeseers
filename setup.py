@@ -13,10 +13,11 @@ def read(fname):
 
 setup(
     name="timeseers",
+    version="0.0.1",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    install_requires=base_packages,
-    extras_require={"dev": dev_packages, "plot": plot_packages},
+    # install_requires=base_packages,
+    # extras_require={"dev": dev_packages, "plot": plot_packages},
     description="An hierarchical version of Facebooks prophet in PyMC3",
     author="Matthijs Brouns",
     long_description=read("readme.md"),

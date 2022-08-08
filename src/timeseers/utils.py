@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# test
+
 
 def dot(a, b):
     return (a * b[None, :]).sum(axis=-1)

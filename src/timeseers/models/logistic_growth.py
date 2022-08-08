@@ -1,7 +1,7 @@
 import numpy as np
 import theano.tensor as T
 import theano
-from timeseers.timeseries_model import TimeSeriesModel
+from timeseers.models.timeseries_model import TimeSeriesModel
 from timeseers.utils import add_subplot, get_group_definition
 import pymc3 as pm
 
