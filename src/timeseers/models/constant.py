@@ -45,7 +45,7 @@ class Constant(TimeSeriesModel):
     def _predict(self, trace, t, group_value=None, pool_group=0):
 
         if group_value is not None:
-            pool_group = self.pool_value_to_group(self, group_value)
+            pool_group = self.pool_value_to_group(group_value)
 
         ind = trace[self._param_name("c")][:, pool_group]
 
