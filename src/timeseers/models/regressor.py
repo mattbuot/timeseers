@@ -53,7 +53,11 @@ class Regressor(TimeSeriesModel):
 
         return k[group, X[self.on].cat.codes]
 
-    def _predict(self, trace, t, pool_group=0):
+    def _predict(self, trace, t, group_value=None, pool_group=0):
+
+        if group_value is not None:
+            pool_group = self.pool_value_to_group(self, group_value)
+
         ind = trace[self._param_name("k")][:, pool_group]
 
         return np.ones_like(t)[:, None] * ind.reshape(1, -1)

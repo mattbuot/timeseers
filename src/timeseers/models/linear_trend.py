@@ -74,7 +74,11 @@ class LinearTrend(TimeSeriesModel):
             )
         return g
 
-    def _predict(self, trace, t, pool_group=0):
+    def _predict(self, trace, t, group_value=None, pool_group=0):
+
+        if group_value is not None:
+            pool_group = self.pool_value_to_group(self, group_value)
+
         A = (t[:, None] > self.s) * 1
 
         k, m = (

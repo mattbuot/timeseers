@@ -112,7 +112,10 @@ class LogisticGrowth(TimeSeriesModel):
             growth = self.cap_scaled / (1 + pm.math.exp(-growth))
         return growth
 
-    def _predict(self, trace, t, pool_group=0):
+    def _predict(self, trace, t, group_value=None, pool_group=0):
+
+        if group_value is not None:
+            pool_group = self.pool_value_to_group(self, group_value)
 
         delta = trace[self._param_name("delta")][:, pool_group]
         k = trace[self._param_name("k")][:, pool_group]

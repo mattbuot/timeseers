@@ -71,13 +71,24 @@ class TimeSeriesModel(ABC):
         fig.tight_layout()
         return fig
 
-    def predict_at(self, t, pool_group=0):
+    def predict_at(self, t, group_value=None):
 
         t_scaled = self._X_scaler_.transform(t)
-        pred_scaled = self._predict(self.trace_, [t_scaled], pool_group=pool_group)
+        pred_scaled = self._predict(
+            self.trace_, np.array([t_scaled]), group_value=group_value
+        )
         pred = self._y_scaler_.inv_transform(pred_scaled)
 
-        return pred.mean(axis=1)
+        return pred.mean()
+
+    def pool_value_to_group(self, group_value):
+
+        if group_value is not None and self.groups_:
+            group_to_number = {v: k for k, v in self.groups_.items()}
+            pool_group = group_to_number[group_value]
+        else:
+            pool_group = 0
+        return pool_group
 
     @abstractmethod
     def plot(self, trace, t, y_scaler):
