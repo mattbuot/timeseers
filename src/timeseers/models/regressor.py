@@ -69,7 +69,9 @@ class Regressor(TimeSeriesModel):
         trend_return = np.empty((len(scaled_t), len(self.groups_)))
         plot_data = []
         for group_code, group_name in self.groups_.items():
-            y_hat = np.mean(self._predict(trace, scaled_t, group_code), axis=1)
+            y_hat = np.mean(
+                self._predict(trace, scaled_t, pool_group=group_code), axis=1
+            )
             trend_return[:, group_code] = y_hat
             plot_data.append((group_name, y_hat[0]))
         ax.bar(*zip(*plot_data))

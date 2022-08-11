@@ -137,7 +137,7 @@ class LogisticGrowth(TimeSeriesModel):
         ax.set_xticks([])
         growth_return = np.empty((len(scaled_t), len(self.groups_)))
         for group_code, group_name in self.groups_.items():
-            scaled_growth = self._predict(trace, scaled_t, group_code)
+            scaled_growth = self._predict(trace, scaled_t, pool_group=group_code)
             growth = y_scaler.inv_transform(scaled_growth)
             ax.plot(scaled_t, growth.mean(axis=1), label=group_name)
             growth_return[:, group_code] = scaled_growth.mean(axis=1)

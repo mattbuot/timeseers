@@ -82,7 +82,7 @@ class FourierSeasonality(TimeSeriesModel):
 
         seasonality_return = np.empty((len(scaled_t), len(self.groups_)))
         for group_code, group_name in self.groups_.items():
-            scaled_s = self._predict(trace, scaled_t, group_code)
+            scaled_s = self._predict(trace, scaled_t, pool_group=group_code)
             s = y_scaler.inv_transform(scaled_s)
             ax.plot(
                 list(range(self.period.days)),

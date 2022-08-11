@@ -96,7 +96,7 @@ class LinearTrend(TimeSeriesModel):
         ax.set_xticks([])
         trend_return = np.empty((len(scaled_t), len(self.groups_)))
         for group_code, group_name in self.groups_.items():
-            scaled_trend = self._predict(trace, scaled_t, group_code)
+            scaled_trend = self._predict(trace, scaled_t, pool_group=group_code)
             trend = y_scaler.inv_transform(scaled_trend)
             ax.plot(scaled_t, trend.mean(axis=1), label=group_name)
             trend_return[:, group_code] = scaled_trend.mean(axis=1)

@@ -48,7 +48,9 @@ class Indicator(TimeSeriesModel):
         ax.set_xticks([])
         trend_return = np.empty((len(scaled_t), len(self.groups_)))
         for group_code, group_name in self.groups_.items():
-            y_hat = mode(self._predict(trace, scaled_t, group_code), axis=1)[0][:, 0]
+            y_hat = mode(self._predict(trace, scaled_t, pool_group=group_code), axis=1)[
+                0
+            ][:, 0]
             ax.plot(scaled_t, y_hat, label=group_name)
             trend_return[:, group_code] = y_hat
         ax.set_ylim([-1.05, 1.05])
