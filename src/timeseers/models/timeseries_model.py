@@ -75,7 +75,7 @@ class TimeSeriesModel(ABC):
 
         t_scaled = self._X_scaler_.transform(t)
         pred_scaled = self._predict(
-            self.trace_, np.array([t_scaled]), group_value=group_value
+            self.trace_, np.array(t_scaled), group_value=group_value
         )
         pred = self._y_scaler_.inv_transform(pred_scaled)
 
